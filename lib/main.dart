@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:weather_application/Screen/weather_home.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:weather_application/database/hive_database.dart';
+import 'package:weather_application/screens/weather_home.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await HiveDatabase.init();
+  
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-     debugShowCheckedModeBanner: false,
-      home:  WeatherHome(),
+      debugShowCheckedModeBanner: false,
+      home: WeatherHome(),
     );
   }
 }
