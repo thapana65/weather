@@ -37,4 +37,12 @@ class WeatherProvider extends ChangeNotifier {
     HiveDatabase.removeCity(city);
     savedCities.remove(city);
   }
+
+  void updateCityOrder(List<String> newOrder) {
+    HiveDatabase.updateCityOrder(
+      newOrder.map((city) => {"name": city}).toList(),
+    );
+    savedCities = newOrder;
+    notifyListeners();
+  }
 }

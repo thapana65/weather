@@ -51,7 +51,6 @@ class WeatherData {
   }
 }
 
-// 📌 ข้อมูลพิกัด (Latitude, Longitude)
 class Coord {
   final double lon;
   final double lat;
@@ -63,7 +62,6 @@ class Coord {
   }
 }
 
-// 📌 ข้อมูลสภาพอากาศ (Weather)
 class WeatherInfo {
   final int id;
   final String main;
@@ -87,7 +85,6 @@ class WeatherInfo {
   }
 }
 
-// 📌 ข้อมูลหลัก (Temperature, Pressure, Humidity)
 class MainInfo {
   final double temp;
   final double feelsLike;

@@ -51,7 +51,12 @@ void confirmDeleteCity(
   );
 }
 
-void deleteCity(BuildContext context, String cityName, String country, Function updateUI) {
+void deleteCity(
+  BuildContext context,
+  String cityName,
+  String country,
+  Function updateUI,
+) {
   HiveDatabase.removeCity(cityName);
   updateUI();
 
@@ -67,13 +72,21 @@ void loadCities(
   Function(List<Map<String, dynamic>>, String?) updateUI,
 ) {
   List<Map<String, dynamic>> cities = HiveDatabase.getCities();
+  for (var city in cities) {
+    if (!city.containsKey("country")) {
+      city["country"] = "--";
+    }
+  }
+  
+  cities.sort((a, b) => ((a["order"] ?? 9999) as int).compareTo((b["order"] ?? 9999) as int));
+  
   String? selectedCity = cities.isNotEmpty ? cities.first["name"] : null;
   updateUI(cities, selectedCity);
 }
 
 void fetchWeather(
   BuildContext context,
-  String cityName, 
+  String cityName,
   Function(WeatherData, String) updateUI,
   Function() setLoading,
 ) {
