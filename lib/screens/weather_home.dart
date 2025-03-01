@@ -3,7 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:weather_application/models/weather_model.dart';
 import 'package:weather_application/services/services.dart';
 import 'package:weather_application/database/hive_database.dart';
+import 'package:weather_application/utils/utils.dart';
 import 'package:weather_application/screens/weather_add.dart';
+import 'package:weather_application/screens/weather_list.dart';
 
 class WeatherHome extends StatefulWidget {
   const WeatherHome({super.key});
@@ -17,88 +19,50 @@ class _WeatherHomeState extends State<WeatherHome> {
   bool isLoading = false;
   List<Map<String, dynamic>> cities = [];
   String? selectedCity;
-  String? selectedContry;
+  String? selectedCountry;
 
   @override
   void initState() {
     super.initState();
-    _loadCities();
-  }
+    loadCities(context, (newCities, newSelectedCity) {
+      setState(() {
+        cities = newCities;
+        selectedCity = newSelectedCity;
+      });
 
-  void _loadCities() {
-    setState(() {
-      cities = HiveDatabase.getCities();
-      if (cities.isNotEmpty) {
-        selectedCity = cities.first["name"];
-        fetchWeather(selectedCity!);
+      if (selectedCity != null) {
+        fetchWeather(context, selectedCity!, _updateWeather, _setLoading);
       }
     });
   }
 
-  void fetchWeather(String cityName) {
+  void _updateWeather(WeatherData newWeather, String newCountry) {
+    setState(() {
+      weatherInfo = newWeather;
+      selectedCountry = newCountry;
+      isLoading = false;
+    });
+  }
+
+  void _setLoading() {
     setState(() {
       isLoading = true;
     });
-
-    WeatherServices()
-        .fetchWeather(cityName)
-        .then((value) {
-          setState(() {
-            weatherInfo = value;
-            selectedContry =
-                weatherInfo.sys.country.isNotEmpty
-                    ? weatherInfo.sys.country
-                    : "--";
-            isLoading = false;
-          });
-        })
-        .catchError((error) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("Error: ${error.toString()}")));
-          setState(() {
-            isLoading = false;
-          });
-        });
-  }
-
-  void _confirmDeleteCity(String cityName) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("ยืนยันการลบ"),
-          content: Text(
-            "คุณต้องการลบเมือง $cityName,${weatherInfo.sys.country} ใช่หรือไม่?",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("ยกเลิก"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _deleteCity(cityName);
-              },
-              child: const Text("ลบ", style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _deleteCity(String cityName) {
-    if (selectedCity == cityName) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("ไม่สามารถลบเมืองที่เลือกอยู่ได้")),
-      );
-      return;
-    }
+    deleteCity(context, cityName, selectedCountry ?? "--", () {
+      loadCities(context, (newCities, newSelectedCity) {
+        setState(() {
+          cities = newCities;
+          selectedCity = newSelectedCity;
+        });
 
-    HiveDatabase.removeCity(cityName);
-    _loadCities();
+        if (selectedCity != null) {
+          fetchWeather(context, selectedCity!, _updateWeather, _setLoading);
+        }
+      });
+    });
   }
 
   @override
@@ -108,7 +72,10 @@ class _WeatherHomeState extends State<WeatherHome> {
       appBar: AppBar(
         title:
             cities.isEmpty
-                ? const Text("Weather A", style: TextStyle(color: Colors.black))
+                ? const Text(
+                  "Weather App",
+                  style: TextStyle(color: Colors.black),
+                )
                 : DropdownButton<String>(
                   value: selectedCity,
                   dropdownColor: Colors.white,
@@ -122,20 +89,54 @@ class _WeatherHomeState extends State<WeatherHome> {
                   onChanged: (String? newValue) {
                     setState(() {
                       selectedCity = newValue;
-                      fetchWeather(selectedCity!);
+                      fetchWeather(
+                        context,
+                        selectedCity!,
+                        _updateWeather,
+                        _setLoading,
+                      );
                     });
                   },
                   items:
                       cities.map<DropdownMenuItem<String>>((city) {
                         return DropdownMenuItem<String>(
                           value: city["name"],
-                          child: Text(city["name"]),
+                          child: Text(
+                            "${city["name"]}, ${selectedCountry ?? "--"}",
+                          ),
                         );
                       }).toList(),
                 ),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.list_alt, color: Colors.black),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const WeatherList()),
+              );
+
+              if (result == true) {
+                loadCities(context, (newCities, newSeletedCity) {
+                  setState(() {
+                    cities = newCities;
+                    selectedCity = newSeletedCity;
+                  });
+
+                  if (selectedCity != null) {
+                    fetchWeather(
+                      context,
+                      selectedCity!,
+                      _updateWeather,
+                      _setLoading,
+                    );
+                  }
+                });
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black),
             onPressed: () async {
@@ -146,8 +147,21 @@ class _WeatherHomeState extends State<WeatherHome> {
 
               if (newCity != null && newCity is String) {
                 HiveDatabase.addCity(newCity);
-                _loadCities();
-                fetchWeather(newCity);
+                loadCities(context, (newCities, newSelectedCity) {
+                  setState(() {
+                    cities = newCities;
+                    selectedCity = newSelectedCity;
+                  });
+
+                  if (selectedCity != null) {
+                    fetchWeather(
+                      context,
+                      selectedCity!,
+                      _updateWeather,
+                      _setLoading,
+                    );
+                  }
+                });
               }
             },
           ),
@@ -178,42 +192,6 @@ class _WeatherHomeState extends State<WeatherHome> {
                                 ),
                               )
                               : WeatherDetail(weather: weatherInfo),
-                    ),
-                    const SizedBox(height: 10),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: cities.length,
-                        itemBuilder: (context, index) {
-                          final city = cities[index]["name"];
-                          final addedAt = DateTime.parse(
-                            cities[index]["added_at"],
-                          );
-
-                          return ListTile(
-                            title: Text(
-                              city,
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                            subtitle: Text(
-                              "Added on: ${DateFormat('MMM d, yyyy - hh:mm a').format(addedAt)}",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _confirmDeleteCity(city),
-                            ),
-                            onTap: () {
-                              setState(() {
-                                selectedCity = city;
-                              });
-                              fetchWeather(city);
-                            },
-                          );
-                        },
-                      ),
                     ),
                   ],
                 ),
@@ -277,9 +255,7 @@ class WeatherDetail extends StatelessWidget {
               children: [
                 const Icon(Icons.air, size: 18),
                 const SizedBox(width: 5),
-                Text(
-                  "${weather.wind.speed}m/s ${_getWindDirection(weather.wind.deg)}",
-                ),
+                Text("${weather.wind.speed}m/s"),
               ],
             ),
             const SizedBox(width: 15),
@@ -309,25 +285,5 @@ class WeatherDetail extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _getWindDirection(int degree) {
-    if (degree >= 337 || degree < 23) {
-      return "N";
-    } else if (degree >= 23 && degree < 68) {
-      return "NE";
-    } else if (degree >= 68 && degree < 113) {
-      return "E";
-    } else if (degree >= 113 && degree < 158) {
-      return "SE";
-    } else if (degree >= 158 && degree < 203) {
-      return "S";
-    } else if (degree >= 203 && degree < 248) {
-      return "SW";
-    } else if (degree >= 248 && degree < 293) {
-      return "W";
-    } else {
-      return "NW";
-    }
   }
 }

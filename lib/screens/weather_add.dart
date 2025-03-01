@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:weather_application/database/hive_database.dart';
+import 'package:weather_application/utils/utils.dart'; // ✅ ใช้ utils.dart
 
 class WeatherAdd extends StatefulWidget {
   const WeatherAdd({super.key});
@@ -15,7 +16,7 @@ class _WeatherAddState extends State<WeatherAdd> {
     String cityName = cityController.text.trim();
 
     if (cityName.isEmpty) {
-      _showErrorDialog("โปรดกรอกชื่อเมือง");
+      showErrorDialog(context, "โปรดกรอกชื่อเมือง");
       return;
     }
 
@@ -25,35 +26,14 @@ class _WeatherAddState extends State<WeatherAdd> {
     );
 
     if (cityExists) {
-      _showErrorDialog("เมืองนี้ถูกเพิ่มแล้ว");
+      showErrorDialog(context, "เมืองนี้ถูกเพิ่มแล้ว");
       return;
     }
 
     HiveDatabase.addCity(cityName);
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("$cityName ถูกเพิ่มเรียบร้อยแล้ว")));
+    showSnackBar(context, "$cityName ถูกเพิ่มเรียบร้อยแล้ว");
 
     Navigator.pop(context, cityName);
-  }
-
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("ข้อผิดพลาด"),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("ตกลง"),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -86,7 +66,7 @@ class _WeatherAddState extends State<WeatherAdd> {
             const SizedBox(height: 20),
             Center(
               child: ElevatedButton(
-                onPressed: _addCity, // ✅ เรียกฟังก์ชันตรวจสอบข้อมูลก่อนเพิ่ม
+                onPressed: _addCity,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
                   padding: const EdgeInsets.symmetric(
