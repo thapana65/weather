@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:weather_application/database/hive_database.dart';
-import 'package:weather_application/models/weather_model.dart';
-import 'package:weather_application/services/services.dart';
-import 'package:weather_application/utils/utils.dart';
+import 'package:Forecast/database/hive_database.dart';
+import 'package:Forecast/models/weather_model.dart';
+import 'package:Forecast/services/weather_service.dart';
+import 'package:Forecast/utils/utils.dart';
 
 class WeatherList extends StatefulWidget {
   const WeatherList({super.key});
@@ -18,8 +18,8 @@ class _WeatherListState extends State<WeatherList> {
   bool isEditing = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
     _loadCities();
   }
 
@@ -28,13 +28,17 @@ class _WeatherListState extends State<WeatherList> {
       cities = HiveDatabase.getCities();
     });
 
-    // for (var city in cities) {
-    //   if (!countryCache.containsKey(city["name"])) {
-    //     _fetchCountry(city["name"]);
-    //   }
-    // }
+    for (var city in cities) {
+      if (!countryCache.containsKey(city["name"]) ||
+          countryCache[city["name"]] == "--") {
+        _fetchCountry(city["name"]);
+      }
+    }
 
-    cities.sort((a, b) => ((a["order"] ?? 9999) as int).compareTo((b["order"] ?? 9999) as int));
+    cities.sort(
+      (a, b) =>
+          ((a["order"] ?? 9999) as int).compareTo((b["order"] ?? 9999) as int),
+    );
   }
 
   Future<void> _fetchCountry(String cityName) async {
@@ -67,8 +71,6 @@ class _WeatherListState extends State<WeatherList> {
     });
 
     HiveDatabase.updateCityOrder(cities);
-
-    _loadCities();
   }
 
   @override
@@ -95,7 +97,7 @@ class _WeatherListState extends State<WeatherList> {
 
                 if (!isEditing) {
                   HiveDatabase.updateCityOrder(cities);
-                  Navigator.pop(context, true);
+                   _loadCities();
                 }
               },
             ),

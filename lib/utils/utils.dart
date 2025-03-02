@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:weather_application/database/hive_database.dart';
-import 'package:weather_application/Services/services.dart';
-import 'package:weather_application/models/weather_model.dart';
+import 'package:Forecast/database/hive_database.dart';
+import 'package:Forecast/services/weather_service.dart';
+import 'package:Forecast/models/weather_model.dart';
 
 void showErrorDialog(BuildContext context, String msg) {
   showDialog(
@@ -85,7 +85,6 @@ void loadCities(
 }
 
 void fetchWeather(
-  BuildContext context,
   String cityName,
   Function(WeatherData, String) updateUI,
   Function() setLoading,
@@ -100,7 +99,7 @@ void fetchWeather(
         updateUI(weatherInfo, country);
       })
       .catchError((error) {
-        showSnackBar(context, "Error: ${error.toString()}");
+        print("Error: ${error.toString()}");
         setLoading();
       });
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:weather_application/models/weather_model.dart';
-import 'package:weather_application/services/services.dart';
-import 'package:weather_application/database/hive_database.dart';
+import 'package:Forecast/models/weather_model.dart';
+import 'package:Forecast/services/weather_service.dart';
+import 'package:Forecast/database/hive_database.dart';
 
 class WeatherProvider extends ChangeNotifier {
   WeatherData? weatherData;
@@ -27,9 +27,9 @@ class WeatherProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addCity(String city) {
+  void addCity(Map<String, String> city) {
     HiveDatabase.addCity(city);
-    savedCities.add(city);
+    savedCities.add(city["name"] ?? "");
     notifyListeners();
   }
 

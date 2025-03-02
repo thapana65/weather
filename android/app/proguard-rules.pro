@@ -1,0 +1,5 @@
+-keep class com.weather_application.** { *; }
+-keep class okhttp3.** { *; }
+-keep class com.google.gson.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*

@@ -40,11 +40,10 @@ class WeatherBackground extends StatelessWidget {
     }
   }
 
-  /// ✅ เปลี่ยนสีพื้นหลังตาม `ช่วงเวลา` และ `weatherCondition`
   List<Color> _getBackgroundColors(String condition) {
-    String timeOfDay = _getTimeOfDay(); // ✅ เช็คช่วงเวลา
+    String timeOfDay = _getTimeOfDay();
 
-    if (timeOfDay == "morning") { // 🌅 เช้า
+    if (timeOfDay == "morning") {
       switch (condition.toLowerCase()) {
         case "clear":
           return [const Color(0xFFFFD54F), const Color(0xFFFFF176)];
