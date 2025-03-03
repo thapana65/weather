@@ -17,6 +17,7 @@ To configure the environment variables, follow these steps:
    ```
    # Environment Variables
    .env
+   assets/env/.env
    ```
 4. **Modify `pubspec.yaml`** to include the `.env` file:
    ```yaml
